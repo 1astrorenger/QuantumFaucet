@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monad Test Token Faucet</title>
+    <style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(106, 13, 173, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(138, 43, 226, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(106, 13, 173, 0.5); }
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #0a0a1a;
+            color: #e6e6e6;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            background-color: rgba(26, 26, 46, 0.8);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(106, 13, 173, 0.3);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            animation: float 6s infinite ease-in-out;
+        }
+        
+        h1 {
+            color: #9c64ff;
+            text-shadow: 0 0 10px rgba(156, 100, 255, 0.5);
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #b8b8b8;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            border: 2px solid #4a148c;
+            border-radius: 8px;
+            background-color: #16213e;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #8a2be2;
+            box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #6a0dad, #8a2be2);
+            color: white;
+            padding: 16px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: pulse 3s infinite;
+            margin-bottom: 20px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.6);
+            animation: none;
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button:disabled {
+            background: #4b0082;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+            animation: none;
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(0);
+            opacity: 0;
+            transition: transform 0.5s, opacity 1s;
+            border-radius: 50%;
+        }
+        
+        button:hover::after {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        #status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .success {
+            background-color: rgba(75, 181, 67, 0.2);
+            color: #4BB543;
+            border: 1px solid #4BB543;
+        }
+        
+        .error {
+            background-color: rgba(255, 51, 51, 0.2);
+            color: #ff3333;
+            border: 1px solid #ff3333;
+        }
+        
+        #faucetBalance {
+            font-size: 16px;
+            color: #a78bfa;
+            margin-bottom: 20px;
+        }
+        
+        .author {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #6a6a8e;
+        }
+        
+        .author a {
+            color: #9c64ff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .author a:hover {
+            color: #8a2be2;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="container">
+        <h1>Monad Test Token Faucet</h1>
+        <p>Get free test tokens for the Monad testnet</p>
+        
+        <div class="input-group">
+            <input type="text" id="walletAddress" placeholder="Enter your Monad wallet address (0x...)" />
+        </div>
+        
+        <button id="requestButton">Claim Tokens</button>
+        
+        <div id="status"></div>
+        <div id="faucetBalance">Faucet balance: loading...</div>
+        
+        <div class="author">
+            Created by <a href="https://t.me/vladusdc" target="_blank">@vladusdc</a>
+        </div>
+    </div>
+
+    <script>
+        // Create stars for background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starsCount = 100;
+            
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random size between 1 and 3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // Random position
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation duration
+                star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            
+            const walletAddress = document.getElementById('walletAddress');
+            const requestButton = document.getElementById('requestButton');
+            const statusDiv = document.getElementById('status');
+            const faucetBalance = document.getElementById('faucetBalance');
+            
+            // Проверяем баланс крана при загрузке
+            updateFaucetBalance();
+            
+            requestButton.addEventListener('click', async function() {
+                const address = walletAddress.value.trim();
+                
+                if (!address) {
+                    showStatus('Please enter a wallet address', 'error');
+                    return;
+                }
+                
+                if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+                    showStatus('Invalid wallet address format', 'error');
+                    return;
+                }
+                
+                requestButton.disabled = true;
+                requestButton.textContent = 'Processing...';
+                showStatus('Processing your request...');
+                
+                try {
+                    const response = await fetch('http://localhost:3000/faucet', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ address }),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showStatus(`Success! 100 tokens sent. TX hash: ${data.txHash}`, 'success');
+                    } else {
+                        showStatus(`Error: ${data.error}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, 'error');
+                } finally {
+                    requestButton.disabled = false;
+                    requestButton.textContent = 'Claim Tokens';
+                    updateFaucetBalance();
+                }
+            });
+            
+            async function updateFaucetBalance() {
+                try {
+                    const response = await fetch('http://localhost:3000/balance');
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        faucetBalance.textContent = `Faucet balance: ${data.balance} tokens`;
+                    } else {
+                        faucetBalance.textContent = `Faucet balance: error loading`;
+                    }
+                } catch (error) {
+                    faucetBalance.textContent = `Faucet balance: error loading`;
+                }
+            }
+            
+            function showStatus(message, type = '') {
+                statusDiv.textContent = message;
+                statusDiv.className = type;
+            }
+        });
+    </script>
+</body>
+</html>
