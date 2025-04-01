@@ -3,7 +3,6 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { ethers } = require('ethers');
-const fs = require('fs'); // Добавляем модуль для проверки файлов
 
 const app = express();
 
@@ -11,33 +10,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Проверяем существование index.html в корне
-const indexPath = path.join(__dirname, 'index.html');
-if (!fs.existsSync(indexPath)) {
+// Проверка существования index.html
+try {
+  fs.accessSync(path.join(__dirname, 'index.html'));
+} catch (err) {
   console.error('ERROR: index.html not found in project root!');
   process.exit(1);
 }
 
-// Раздаём статику из корня проекта
+// Раздача статики из корня
 app.use(express.static(__dirname));
 
-// Все GET-запросы перенаправляем на index.html
-app.get('*', (req, res) => {
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      console.error('Error sending index.html:', err);
-      res.status(500).send('Server error - index.html not found');
-    }
+// Безопасный catch-all роут
+app.get(/^\/(?!api).*/, (req, res) => { // Исключаем /api/ маршруты
+  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+    if (err) res.status(500).send('Error loading page');
   });
 });
 
-// Ваши API-роуты
+// API роуты
 app.post('/faucet', async (req, res) => {
-  // ... ваш код faucet ...
+  // ... ваш код ...
 });
 
 app.get('/balance', async (req, res) => {
-  // ... ваш код получения баланса ...
+  // ... ваш код ...
 });
 
 // Обработка ошибок
@@ -46,9 +43,7 @@ app.use((err, req, res, next) => {
   res.status(500).send('Server error');
 });
 
-// Запуск сервера
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Serving index.html from: ${indexPath}`);
 });
